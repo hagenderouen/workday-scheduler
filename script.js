@@ -1,17 +1,7 @@
-const timeblockEl = $('#timeblock');
-const today = moment();
+const timeblockEl = $('#timeblock');  
 
 // Displays the current date
-$('#currentDay').text(today.format('dddd[,] MMMM Do'));
-
-// Reference
-// const schedule = {
-//     events: [
-//         {
-//             displayedHour: '8AM', 
-//             event: 'Do something'
-//         }
-// }
+$('#currentDay').text(moment().format('dddd[,] MMMM Do'));
 
 // Creates an array of the displayed hours ex. (8AM - 5PM)
 const getDisplayHours = function(startHour, maxHours) {
@@ -34,15 +24,33 @@ const getDisplayHours = function(startHour, maxHours) {
     return hours;
 }
 
+// Evaluates hour and returns color class
+const getItemColorClass = function(hour) {
+    let currHour = moment().format('hA');
+
+    // If it's the current hour, returns green class
+    if (currHour === hour) {
+        return 'list-group-item-success';
+    }
+    // If it's in the past, returns gray class
+    if (moment(hour, 'hA').fromNow().includes('ago')) {
+        return 'list-group-item-secondary';
+    }
+    // If it's in the future, returns red class
+    if (moment(hour, 'hA').fromNow().includes('in')) {
+        return 'list-group-item-danger';
+    }
+}
+
 // Creates an empty schedule object and returns it
 const getEmptySchedule = function() {
 
     let events = [];
-    let displayedHours = getDisplayHours(8, 6);
+    let hours = getDisplayHours(8, 6);
     
-    for (var i = 0; i < displayedHours.length; i++) {
+    for (var i = 0; i < hours.length; i++) {
         let event = {
-            displayedHour: displayedHours[i],
+            hour: hours[i],
             event: ''
         }
         events.push(event);
@@ -59,13 +67,11 @@ const storeSchedule = function(schedule) {
     localStorage.setItem("schedule", JSON.stringify(schedule));
 }
 
-// Gets/creates the schedule from localstorage
+// Gets the schedule from localstorage. If it doesn't exist it creates an empty schedule and stores it in localstorage
 const getSchedule = function() {
-    // get schedule from localstorage
     let schedule = localStorage.getItem("schedule");
-    // if schedule doesn't exist
+    
     if (!schedule) {
-        // create a new empty schedule
         let emptySchedule = getEmptySchedule();
 
         storeSchedule(emptySchedule);
@@ -78,7 +84,7 @@ const getSchedule = function() {
     return schedule;
 }
 
-// Creates the timeblock element for the display
+// Displays the timeblock element
 const displaySchedule = function(schedule) {
 
     let events = schedule.events;
@@ -86,11 +92,12 @@ const displaySchedule = function(schedule) {
     for (var i = 0; i < events.length; i++) {
 
         let currEvent = events[i];
+        let itemColorClass = getItemColorClass(currEvent.hour);
         
         timeblockEl.append(
             `<ul class="list-group list-group-horizontal d-flex justify-content-between">
-            <li class="list-group-item">${currEvent.displayedHour}</li>
-            <textarea class="list-group-item w-100 list-group-item-success">${currEvent.event}</textarea>
+            <li class="list-group-item">${currEvent.hour}</li>
+            <textarea class="list-group-item w-100 ${itemColorClass}">${currEvent.event}</textarea>
             <button class="list-group-item btn btn-primary btn-save"></button>
             </ul>`
       );
@@ -98,31 +105,24 @@ const displaySchedule = function(schedule) {
     }
 }
 
-displaySchedule(getSchedule());
-    
-// TODO 
-// Color coded (gray = past, green = current hour, red = future)
-
+// Parses the schedule from the DOM then initializes and returns a new schedule object
 const getSchedulefromDisplay = function() {
 
-    // initialize new schedule object
     let newSchedule = {
         events: []
     };
 
     let timeBlockList = timeblockEl.children('ul');
     var item = timeBlockList[0];
-    console.log($(timeBlockList[0]).find('li').text());
     
-    // loop through all the timeblock lists
+    // Loops through elements and creates and event object from values. Pushes event to the new Schedule object.
     for (var i = 0; i < timeBlockList.length; i++) {
-        // initialize event object with displayed hour and textarea values
         let item = $(timeBlockList[i]);
         let event = {
-            displayedHour: item.find('li').text(),
+            hour: item.find('li').text(),
             event: item.find('textarea').val()
         }
-        // push event to the events array
+
         newSchedule.events.push(event);
     }
 
@@ -130,12 +130,10 @@ const getSchedulefromDisplay = function() {
 }
 
 const handleSaveSchedule = function() {
-    console.log("you clicked save!");
     let newSchedule = getSchedulefromDisplay();
     storeSchedule(newSchedule);
 }
 
 timeblockEl.on('click', '.btn-save', handleSaveSchedule);
- 
-// TODO
-// Event listener to update the timeblock hour colors as time goes by
+
+displaySchedule(getSchedule());
