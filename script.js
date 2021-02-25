@@ -1,4 +1,4 @@
-const timeblockEl = $('#timeblock');  
+const timeblockEl = $('.time-block');  
 
 // Displays the current date
 $('#currentDay').text(moment().format('dddd[,] MMMM Do'));
@@ -30,15 +30,16 @@ const getItemColorClass = function(hour) {
 
     // If it's the current hour, returns green class
     if (currHour === hour) {
-        return 'list-group-item-success';
+        //return 'list-group-item-success';
+        return 'present'
     }
     // If it's in the past, returns gray class
     if (moment(hour, 'hA').fromNow().includes('ago')) {
-        return 'list-group-item-secondary';
+        return 'past';
     }
     // If it's in the future, returns red class
     if (moment(hour, 'hA').fromNow().includes('in')) {
-        return 'list-group-item-danger';
+        return 'future';
     }
 }
 
@@ -96,9 +97,9 @@ const displaySchedule = function(schedule) {
         
         timeblockEl.append(
             `<ul class="list-group list-group-horizontal d-flex justify-content-between">
-            <li class="list-group-item">${currEvent.hour}</li>
+            <li class="list-group-item hour">${currEvent.hour}</li>
             <textarea class="list-group-item w-100 ${itemColorClass}">${currEvent.event}</textarea>
-            <button class="list-group-item btn btn-primary btn-save"></button>
+            <button class="list-group-item saveBtn"><i class="fas fa-save"></i></button>
             </ul>`
       );
 
@@ -134,6 +135,6 @@ const handleSaveSchedule = function() {
     storeSchedule(newSchedule);
 }
 
-timeblockEl.on('click', '.btn-save', handleSaveSchedule);
+timeblockEl.on('click', '.saveBtn', handleSaveSchedule);
 
 displaySchedule(getSchedule());
